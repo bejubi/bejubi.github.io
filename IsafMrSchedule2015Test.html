@@ -1,0 +1,61 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+baseUrl = 'http://www.sailing.org/regattasearch.php?nocache=1&includeref=regattasearch&regattadiscipline=1&regattatype=1&regattayear=2015&regattacountry=211';
+
+// Accepts a url and a callback function to run.
+function requestCrossDomain(site, callback) {
+
+    // If no url was passed, exit.
+    if (!site) {
+        alert('No site was passed.');
+        return false;
+    }
+
+    var yql = 'select * from html where url=\'' + site + '\' and xpath=\'//table[@class=\"results\"]\'';
+
+    var yqlRequest = 'http://query.yahooapis.com/v1/public/yql?q=' 
+    	+ encodeURIComponent(yql) 
+    	+ '&diagnostics=true&callback=?';
+
+    // Request that YSQL string, and run a callback function.
+    // Pass a defined function to prevent cache-busting.
+    $.getJSON(yqlRequest, cbFunc);
+
+    function cbFunc(data) {
+        // If we have something to work with...
+        if (data.results[0]) {
+            // Strip out all script tags, for security reasons.
+            // BE VERY CAREFUL. This helps, but we should do more.
+            data = data.results[0].replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+			data = data.replace('LBYC', 'NNYC');
+
+            // If the user passed a callback, and it
+            // is a function, call it, and send through the data var.
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        }
+        // Else, Maybe we requested a site that doesn't exist, and nothing returned.
+        else throw new Error('Nothing returned from getJSON.');
+    }
+}
+
+requestCrossDomain(baseUrl, function (results) {
+    $('body').html(results);
+});
+</script>
+<style>
+table.results tr td {
+    color: #002664;
+    font-size: 0.75em;
+    padding: 5px;
+    border-top: 1px solid #000000;
+    //border-bottom: 1px solid #000000;
+}
+</style>
+</head>
+<body>
+</body>
+</html>
